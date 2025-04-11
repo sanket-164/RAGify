@@ -2,3 +2,5 @@
 myenv
 *vectorstore
 data
+__pycache__
+uploads/

@@ -1,13 +1,17 @@
-from langchain_community.document_loaders import YoutubeLoader, TextLoader, WebBaseLoader, PyPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 import pandas as pd
-from docx import Document
+from docx import Document 
 from pptx import Presentation
 from dotenv import load_dotenv
+from langchain_chroma import Chroma
+from langchain.prompts import ChatPromptTemplate
+from langchain.chains import create_retrieval_chain
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
+from langchain_community.document_loaders import YoutubeLoader, TextLoader, WebBaseLoader, PyPDFLoader
 
 load_dotenv()
 
-# Function to create chunks from a YouTube video transcript
 def chunk_youtube_video(url, chunk_size=1000, chunk_overlap=200):
     """
     Loads the transcript of a YouTube video and splits it into chunks.
@@ -20,7 +24,6 @@ def chunk_youtube_video(url, chunk_size=1000, chunk_overlap=200):
 
     return chunks
 
-# Function to create chunks from a PDF file
 def chunk_pdf(file_path, chunk_size=1000, chunk_overlap=200):
     """
     Reads a PDF file and creates chunks from its content.
@@ -33,7 +36,6 @@ def chunk_pdf(file_path, chunk_size=1000, chunk_overlap=200):
 
     return chunks
 
-# Function to create chunks from an Excel file
 def chunk_excel(file_path, chunk_size=1000, chunk_overlap=200):
     """
     Reads an Excel file and creates chunks from its content.
@@ -46,7 +48,6 @@ def chunk_excel(file_path, chunk_size=1000, chunk_overlap=200):
 
     return chunks
 
-# Function to create chunks from a website URL
 def chunk_website(url, chunk_size=1000, chunk_overlap=200):
     """
     Fetches the content of a webpage and splits it into chunks.
@@ -59,7 +60,6 @@ def chunk_website(url, chunk_size=1000, chunk_overlap=200):
 
     return chunks
 
-# Function to create chunks from a plain text file
 def chunk_txt_file(file_path, chunk_size=1000, chunk_overlap=200):
     """
     Reads a plain text file and creates chunks from its content.
@@ -72,7 +72,6 @@ def chunk_txt_file(file_path, chunk_size=1000, chunk_overlap=200):
 
     return chunks
 
-# Function to create chunks from a Word document (.docx)
 def chunk_word_doc(file_path, chunk_size=1000, chunk_overlap=200):
     """
     Reads a Word document (.docx) and creates chunks from its content.
@@ -106,10 +105,74 @@ def chunk_pptx(file_path, chunk_size=1000, chunk_overlap=200):
 
     return chunks
 
-# print(chunk_youtube_video("https://youtu.be/ABFqbY_rmEk?si=NL7eaE21XGBe9_Sp"))
-# print(chunk_website("https://pytorch.org/get-started/locally/com"))
-# print(chunk_pdf("data/data-pdf.pdf"))
-# print(chunk_txt_file("data/data-txt.txt"))
-# print(chunk_word_doc("data/data-docs.docx"))
-# print(chunk_pptx("data/data-ppt.pptx"))
-# print(chunk_excel("data/data-excel.xlsx"))
+def create_vectorstore(chunks, persist_directory):
+    """
+    Creates a vectorstore from the chunks.
+    """
+    return Chroma.from_documents(documents=chunks, embedding=GoogleGenerativeAIEmbeddings(model="models/embedding-001"), persist_directory=persist_directory)
+    # return Chroma.from_documents(documents=chunks, embedding=GoogleGenerativeAIEmbeddings(model="models/embedding-001"))
+
+
+def create_rag_chain(vectorstore):
+    """
+    Creates a retrieval-augmented generation (RAG) chain.
+    """
+
+    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 10}) # k: 10 means retrive ten similar documents from 96 documents in the vectorstore
+
+    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.3, max_tokens=None)
+
+    system_prompt = (
+            "You are an assistant for question-answering tasks. "
+            "Use the following pieces of retrieved context to answer "
+            "the question. If you don't know the answer, say that you don't know."
+        )
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        ("user", "Answer the question based on the context below:\n\n{context}\n\nQuestion: {input}"),
+    ])
+
+    question_answer_chain =  create_stuff_documents_chain(llm, prompt)
+    rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+
+    return rag_chain
+
+def chat_with_rag_chain(rag_chain, question):
+    """
+    Interacts with the RAG chain to get an answer for a given question.
+    """
+    response = rag_chain.invoke({"input": question})
+    return response["answer"]
+
+def main():
+    """
+    Main function to run the RAG chain.
+    """
+    
+    chunks = chunk_website("https://github.com/sanket-164")
+    # chunks = chunk_youtube_video("https://youtu.be/QhMO5SSmiaA?si=mhgXeY5AdQRvuYAl")
+    # chunks = chunk_pdf("data/data-pdf.pdf")
+    # chunks = chunk_txt_file("data/data-txt.txt")
+    # chunks = chunk_word_doc("data/data-docs.docx")
+    # chunks = chunk_pptx("data/data-ppt.pptx")
+    # chunks = chunk_excel("data/data-excel.xlsx")
+
+    vectorstore = create_vectorstore(chunks, "vectorstore")
+
+    rag_chain = create_rag_chain(vectorstore)
+
+    while True:
+        question = input("You: ")
+        
+        if question.lower() == "exit" or question.lower() == "quit" or question.lower() == "q":
+            break
+
+        response = chat_with_rag_chain(rag_chain, question)
+        
+        print("AI:", response)
+
+    return
+
+if __name__ == "__main__":
+    main()
