@@ -20,7 +20,10 @@ def select_input():
         min_value=0, max_value=5, step=1
     ))
 
-    st.button("Continue")
+    if st.button("Start Chat"):
+        st.session_state.show_sidebar = True
+        st.session_state.show_balloons = True
+        st.rerun()
 
 if __name__ == "__main__":
     select_input()
