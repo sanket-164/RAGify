@@ -13,6 +13,7 @@ from ragify import (
     create_rag_chain,
     chat_with_rag_chain
 )
+from input_config import select_input
 
 # Initialize session state for chat history and RAG chain
 if "messages" not in st.session_state:
@@ -21,8 +22,8 @@ if "messages" not in st.session_state:
 if "rag_chain" not in st.session_state:
     st.session_state.rag_chain = None
 
-if "uploaded_files" not in st.session_state:
-    st.session_state.uploaded_files = []
+if "processed_files" not in st.session_state:
+    st.session_state.processed_files = []
 
 if "processed_yt_urls" not in st.session_state:
     st.session_state.processed_yt_urls = []
@@ -32,6 +33,15 @@ if "processed_website_urls" not in st.session_state:
 
 if "persist_directory" not in st.session_state:
     st.session_state.persist_directory = f"./{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_vectorstore"
+
+if "no_of_yt_urls" not in st.session_state:
+    st.session_state.no_of_yt_urls = 0
+
+if "no_of_website_urls" not in st.session_state:
+    st.session_state.no_of_website_urls = 0
+
+if "file_extensions" not in st.session_state:
+    st.session_state.file_extensions = []
 
 # Define a permanent uploads directory
 UPLOAD_DIR = "uploads"
@@ -43,29 +53,33 @@ def main():
     st.caption("Upload docs, links, or videos & get instant answers.")
 
     # Sidebar for user inputs
-    st.sidebar.header("Upload or Input URL")
-    uploaded_files = st.sidebar.file_uploader(
-        "Upload files", type=["pptx", "docx", "txt", "pdf", "xlsx"], accept_multiple_files=True
-    )
+    uploaded_files = []
+    if len(st.session_state.file_extensions) > 0:
+        st.sidebar.header("Upload or Input URL")
+        uploaded_files = st.sidebar.file_uploader(
+            "Upload files", type=st.session_state.file_extensions, accept_multiple_files=True
+        )
 
-    # Multiple YouTube URLs (up to 3)
-    st.sidebar.markdown("### YouTube Links (max 2)")
+    # Multiple YouTube URLs
     yt_urls = []
-    for i in range(2):
-        yt_url = st.sidebar.text_input(f"YouTube URL {i+1}")
-        if yt_url:
-            yt_urls.append(yt_url)
+    if st.session_state.no_of_yt_urls > 0:
+        st.sidebar.markdown("### YouTube Links")
+        for i in range(st.session_state.no_of_yt_urls):
+            yt_url = st.sidebar.text_input("YouTube URL", placeholder=f"YouTube Video URL {i+1}", label_visibility="collapsed")
+            if yt_url:
+                yt_urls.append(yt_url)
 
-    # Multiple Website URLs (up to 5)
-    st.sidebar.markdown("### Website Links (max 4)")
+    # Multiple Website URLs
     website_urls = []
-    for i in range(4):
-        site_url = st.sidebar.text_input(f"Website URL {i+1}")
-        if site_url:
-            website_urls.append(site_url)
+    if st.session_state.no_of_website_urls > 0:
+        st.sidebar.markdown("### Website Links")
+        for i in range(st.session_state.no_of_website_urls):
+            site_url = st.sidebar.text_input("Webiste URL", placeholder=f"Website URL {i+1}", label_visibility="collapsed")
+            if site_url:
+                website_urls.append(site_url)
 
 
-    if st.sidebar.button("Clear", use_container_width=True):
+    if st.sidebar.button("Clear Chat", use_container_width=True):
         st.session_state.messages = []
         st.session_state.rag_chain = None
         st.session_state.uploaded_files = []
@@ -73,6 +87,15 @@ def main():
         st.session_state.processed_website_urls = []
         st.success("Chat cleared!")
         st.rerun()
+
+    # if st.sidebar.button("Clear Session", use_container_width=True):
+    #     st.session_state.messages = []
+    #     st.session_state.rag_chain = None
+    #     st.session_state.uploaded_files = []
+    #     st.session_state.processed_yt_urls = []
+    #     st.session_state.processed_website_urls = []
+    #     st.success("Session cleared!")
+    #     st.rerun()
 
     for msg in st.session_state.messages:
         if msg["role"] == "user":
@@ -99,6 +122,8 @@ def main():
             st.session_state.messages.append({"role": "assistant", "content": response})
             with st.chat_message("assistant"):
                 st.markdown(response)
+    else:
+        select_input()
 
     
     if uploaded_files or yt_urls or website_urls:
@@ -109,9 +134,9 @@ def main():
             # Process uploaded files
             if uploaded_files:
                 uploaded_filenames = [f.name for f in uploaded_files]
-                prev_filenames = [f.name for f in st.session_state.get("uploaded_files", [])]
 
-                if uploaded_filenames != prev_filenames:
+                if uploaded_filenames != st.session_state.processed_files:
+                    st.session_state.processed_files = uploaded_filenames
                     with st.spinner("Processing Content..."):
                         content_changed = True
                         for uploaded_file in uploaded_files:
