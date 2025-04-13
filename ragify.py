@@ -9,10 +9,11 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_community.document_loaders import YoutubeLoader, TextLoader, WebBaseLoader, PyPDFLoader
+from utils.constants import CHUNK_SIZE, CHUNK_OVERLAP, EMBEDDING_MODEL, LLM_MODEL
 
 load_dotenv()
 
-def chunk_youtube_video(url, chunk_size=1000, chunk_overlap=200):
+def chunk_youtube_video(url, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP):
     """
     Loads the transcript of a YouTube video and splits it into chunks.
     """
@@ -24,7 +25,7 @@ def chunk_youtube_video(url, chunk_size=1000, chunk_overlap=200):
 
     return chunks
 
-def chunk_pdf(file_path, chunk_size=1000, chunk_overlap=200):
+def chunk_pdf(file_path, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP):
     """
     Reads a PDF file and creates chunks from its content.
     """
@@ -36,7 +37,7 @@ def chunk_pdf(file_path, chunk_size=1000, chunk_overlap=200):
 
     return chunks
 
-def chunk_excel(file_path, chunk_size=1000, chunk_overlap=200):
+def chunk_excel(file_path, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP):
     """
     Reads an Excel file and creates chunks from its content.
     """
@@ -48,7 +49,7 @@ def chunk_excel(file_path, chunk_size=1000, chunk_overlap=200):
 
     return chunks
 
-def chunk_website(url, chunk_size=1000, chunk_overlap=200):
+def chunk_website(url, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP):
     """
     Fetches the content of a webpage and splits it into chunks.
     """
@@ -60,7 +61,7 @@ def chunk_website(url, chunk_size=1000, chunk_overlap=200):
 
     return chunks
 
-def chunk_txt_file(file_path, chunk_size=1000, chunk_overlap=200):
+def chunk_txt_file(file_path, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP):
     """
     Reads a plain text file and creates chunks from its content.
     """
@@ -72,7 +73,7 @@ def chunk_txt_file(file_path, chunk_size=1000, chunk_overlap=200):
 
     return chunks
 
-def chunk_word_doc(file_path, chunk_size=1000, chunk_overlap=200):
+def chunk_word_doc(file_path, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP):
     """
     Reads a Word document (.docx) and creates chunks from its content.
     """
@@ -84,7 +85,7 @@ def chunk_word_doc(file_path, chunk_size=1000, chunk_overlap=200):
 
     return chunks
 
-def chunk_pptx(file_path, chunk_size=1000, chunk_overlap=200):
+def chunk_pptx(file_path, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP):
     """
     Reads a PowerPoint (.pptx) file and creates chunks from its content.
     """
@@ -109,8 +110,8 @@ def create_vectorstore(chunks, persist_directory):
     """
     Creates a vectorstore from the chunks.
     """
-    return Chroma.from_documents(documents=chunks, embedding=GoogleGenerativeAIEmbeddings(model="models/embedding-001"), persist_directory=persist_directory)
-    # return Chroma.from_documents(documents=chunks, embedding=GoogleGenerativeAIEmbeddings(model="models/embedding-001"))
+    return Chroma.from_documents(documents=chunks, embedding=GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL), persist_directory=persist_directory)
+    # return Chroma.from_documents(documents=chunks, embedding=GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL))
 
 
 def create_rag_chain(vectorstore):
@@ -120,7 +121,7 @@ def create_rag_chain(vectorstore):
 
     retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 10}) # k: 10 means retrive ten similar documents from 96 documents in the vectorstore
 
-    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.3, max_tokens=None)
+    llm = ChatGoogleGenerativeAI(model=LLM_MODEL, temperature=0.3, max_tokens=None)
 
     system_prompt = (
             "You are an assistant for question-answering tasks. "

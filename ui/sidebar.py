@@ -11,11 +11,11 @@ from ragify import (
     create_vectorstore,
     create_rag_chain,
 )
-from session import reset_session
+from utils.session import reset_session
+from utils.constants import FILE_UPLOAD_DIRECTORY
 
-# Define a permanent uploads directory
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+# Uploads directory
+os.makedirs(FILE_UPLOAD_DIRECTORY, exist_ok=True)
 
 def check_content_changed(uploaded_filenames, yt_urls, website_urls):
     """
@@ -27,13 +27,6 @@ def check_content_changed(uploaded_filenames, yt_urls, website_urls):
         uploaded_filenames == [] and yt_urls == [] and website_urls == []
     ):
         return False
-    
-    # if (
-    #     len(uploaded_filenames) != len(st.session_state.processed_files) 
-    #     or len(yt_urls) != len(st.session_state.processed_yt_urls) 
-    #     or len(website_urls) != len(st.session_state.processed_website_urls)
-    # ):
-    #     return True
     
     for uploaded_file in uploaded_filenames:
         if uploaded_file not in st.session_state.processed_files:
@@ -51,7 +44,9 @@ def check_content_changed(uploaded_filenames, yt_urls, website_urls):
 
 
 def sidebar():
-    
+    """
+    Sidebar for the Streamlit app to handle file uploads and URL inputs.
+    """
     if st.sidebar.button("New Session", type="primary" ,use_container_width=True):
         reset_session()
         st.session_state.show_balloons = True
@@ -85,8 +80,7 @@ def sidebar():
     uploaded_filenames = [f.name for f in uploaded_files]
     
     if st.sidebar.button("Start Processing", use_container_width=True, disabled=not check_content_changed(uploaded_filenames, yt_urls, website_urls)):
-        all_chunks = []  # List to store chunks from all sources
-        # content_changed = False
+        all_chunks = []
 
         try:
             # Process uploaded files
@@ -95,8 +89,7 @@ def sidebar():
 
                 if uploaded_filenames != st.session_state.processed_files:
                     st.session_state.processed_files = uploaded_filenames
-                    # content_changed = True
-                    
+
                     with st.spinner("Processing Content..."):
                         for uploaded_file in uploaded_files:
                             if uploaded_file.name not in st.session_state.processed_files:
@@ -105,7 +98,7 @@ def sidebar():
                                 ext = os.path.splitext(filename)[1].lower()
 
                                 # Save the file temporarily
-                                save_path = os.path.join(UPLOAD_DIR, filename)
+                                save_path = os.path.join(FILE_UPLOAD_DIRECTORY, filename)
                                 with open(save_path, "wb") as f:
                                     f.write(uploaded_file.read())
 
@@ -124,13 +117,11 @@ def sidebar():
                                     st.error(f"Unsupported file type: {ext}")
                                     continue
 
-                                # Add chunks to the combined list
                                 all_chunks.extend(chunks)
 
             # Process YouTube URLs
             for yt_url in yt_urls:
                 if yt_url and yt_url not in st.session_state.processed_yt_urls:
-                    # content_changed = True
                     
                     with st.spinner(f"Processing YouTube: {yt_url}"):
                         try:
@@ -143,7 +134,6 @@ def sidebar():
             # Process website URLs
             for website_url in website_urls:
                 if website_url and website_url not in st.session_state.processed_website_urls:
-                    # content_changed = True
                     
                     with st.spinner(f"Processing Website: {website_url}"):
                         try:
@@ -155,9 +145,6 @@ def sidebar():
                                 st.error(f"Invalid URL (must start with http/https): {website_url}")
                         except Exception:
                             st.error(f"Failed to process Website URL: {website_url}")
-
-            
-            # st.session_state.content_changed = content_changed
             
             # Create vector store and RAG chain if chunks are generated
             if len(all_chunks) > 0:

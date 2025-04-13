@@ -1,8 +1,10 @@
 import streamlit as st
-from input_config import select_input_method
-from sidebar import sidebar
-from session import session_initialization
-from chat import load_chat_history, handle_user_prompt
+
+from ui.sidebar import sidebar
+from ui.input_config import select_input_method
+from ui.chat import load_chat_history, handle_user_prompt
+
+from utils.session import session_initialization
 
 # Main function to run the Streamlit app
 def main():
