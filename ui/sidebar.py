@@ -42,16 +42,28 @@ def check_content_changed(uploaded_filenames, yt_urls, website_urls):
         
     return False
 
+@st.dialog("Are you sure you want to clear chats?")
+def clear_chat():
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Yeah, don't care", use_container_width=True):
+            st.session_state.messages = []
+            st.rerun()
+    with col2:
+        if st.button("No, want to read them", use_container_width=True):
+            st.rerun()
 
 def sidebar():
     """
     Sidebar for the Streamlit app to handle file uploads and URL inputs.
     """
-    if st.sidebar.button("New Session", type="primary" ,use_container_width=True):
-        reset_session()
-        st.session_state.show_balloons = True
-        st.rerun()
-
+    with st.sidebar.expander("Clear Data", expanded=False):
+        st.error("This will clear all processed content and chat history.\n Are you sure?")
+        if st.button("Yes", use_container_width=True):
+            reset_session()
+            st.session_state.show_balloons = True
+            st.rerun()
+            
     # Sidebar for user inputs
     uploaded_files = []
     if len(st.session_state.file_extensions) > 0:
@@ -88,7 +100,6 @@ def sidebar():
                 uploaded_filenames = [f.name for f in uploaded_files]
 
                 if uploaded_filenames != st.session_state.processed_files:
-                    st.session_state.processed_files = uploaded_filenames
 
                     with st.spinner("Processing Content..."):
                         for uploaded_file in uploaded_files:
@@ -101,6 +112,8 @@ def sidebar():
                                 save_path = os.path.join(FILE_UPLOAD_DIRECTORY, filename)
                                 with open(save_path, "wb") as f:
                                     f.write(uploaded_file.read())
+
+                                print(f"Processing file: {filename} with extension: {ext}")
 
                                 # Call the appropriate chunking function
                                 if ext == ".pdf":
@@ -118,6 +131,8 @@ def sidebar():
                                     continue
 
                                 all_chunks.extend(chunks)
+
+                    st.session_state.processed_files = uploaded_filenames
 
             # Process YouTube URLs
             for yt_url in yt_urls:
@@ -156,15 +171,20 @@ def sidebar():
         except Exception as e:
             st.error(f"Error processing content: {e}")
     
-    if st.sidebar.button("Clear Chat" ,use_container_width=True, disabled=len(st.session_state.messages) == 0):
-        st.session_state.messages = []
-        st.success("Chat cleared!")
-        st.rerun()
+    if st.sidebar.button("Clear Chat" , type="primary", use_container_width=True, disabled=len(st.session_state.messages) == 0):
+        clear_chat()
         
-    with st.sidebar.status("Processed Content", state="complete"):
-        for uploaded_file in st.session_state.processed_files:
-            st.write(f"- {uploaded_file}")
-        for yt_url in st.session_state.processed_yt_urls:
-            st.write(f"- {yt_url}")
-        for website_url in st.session_state.processed_website_urls:
-            st.write(f"- {website_url}")
+    if st.session_state.processed_files != []:
+        with st.sidebar.status("Uploaded Files", state="complete"):
+            for uploaded_file in st.session_state.processed_files:
+                st.write(f"- {uploaded_file}")
+    
+    if st.session_state.processed_yt_urls != []:
+        with st.sidebar.status("YouTube URLs", state="complete"):
+            for yt_url in st.session_state.processed_yt_urls:
+                st.write(f"- {yt_url}")
+
+    if st.session_state.processed_website_urls != []:
+        with st.sidebar.status("Website URLs", state="complete"):
+            for website_url in st.session_state.processed_website_urls:
+                st.write(f"- {website_url}")

@@ -119,7 +119,7 @@ def create_rag_chain(vectorstore):
     Creates a retrieval-augmented generation (RAG) chain.
     """
 
-    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 10}) # k: 10 means retrive ten similar documents from 96 documents in the vectorstore
+    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 15}) # k: 10 means retrive ten similar documents from 96 documents in the vectorstore
 
     llm = ChatGoogleGenerativeAI(model=LLM_MODEL, temperature=0.3, max_tokens=None)
 

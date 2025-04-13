@@ -36,9 +36,6 @@ def session_initialization():
     if "show_balloons" not in st.session_state:
         st.session_state.show_balloons = False
 
-    if "process_content" not in st.session_state:
-        st.session_state.process_content = False
-
     if "content_changed" not in st.session_state:
         st.session_state.content_changed = False
     
@@ -52,11 +49,6 @@ def reset_session():
     st.session_state.processed_yt_urls = []
     st.session_state.processed_website_urls = []
     st.session_state.persist_directory = f"./{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_vectorstore"
-    st.session_state.no_of_yt_urls = 0
-    st.session_state.no_of_website_urls = 0
-    st.session_state.file_extensions = []
-    st.session_state.show_sidebar = False
     st.session_state.show_balloons = False
-    st.session_state.process_content = False
     st.session_state.content_changed = False
     st.session_state.toast_message = ""

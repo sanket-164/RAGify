@@ -1,12 +1,13 @@
 import streamlit as st
 
 from ui.sidebar import sidebar
+from ui.guideline import confirmation_page
 from ui.input_config import select_input_method
 from ui.chat import load_chat_history, handle_user_prompt
 
 from utils.session import session_initialization
 
-# Main function to run the Streamlit app
+
 def main():
     
     st.title("RAGify")
@@ -18,8 +19,6 @@ def main():
     if st.session_state.toast_message:
         st.toast(st.session_state.toast_message)
         st.session_state.toast_message = ""
-    
-    load_chat_history()
 
     if st.session_state.show_sidebar:
         st.markdown(
@@ -36,6 +35,10 @@ def main():
             """,
             unsafe_allow_html=True,
         )
+        if st.session_state.messages == []:
+            confirmation_page()
+        else:
+            load_chat_history()
         sidebar()
     else:
         select_input_method()
