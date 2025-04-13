@@ -52,7 +52,7 @@ def check_content_changed(uploaded_filenames, yt_urls, website_urls):
 
 def sidebar():
     
-    if st.sidebar.button("Clear Session", type="primary" ,use_container_width=True):
+    if st.sidebar.button("New Session", type="primary" ,use_container_width=True):
         reset_session()
         st.session_state.show_balloons = True
         st.rerun()
@@ -60,7 +60,6 @@ def sidebar():
     # Sidebar for user inputs
     uploaded_files = []
     if len(st.session_state.file_extensions) > 0:
-        st.sidebar.header("Upload or Input URL")
         uploaded_files = st.sidebar.file_uploader(
             "Upload files", type=st.session_state.file_extensions, accept_multiple_files=True
         )
@@ -164,14 +163,21 @@ def sidebar():
             if len(all_chunks) > 0:
                 vectorstore = create_vectorstore(all_chunks, st.session_state.persist_directory)
                 st.session_state.rag_chain = create_rag_chain(vectorstore)
-                st.success("Content processed successfully! You can now ask questions.")
-                # content_changed = False
+                st.session_state.toast_message = "Content processed successfully!"
                 st.rerun()
 
         except Exception as e:
             st.error(f"Error processing content: {e}")
     
-    if st.sidebar.button("Clear Chat" ,use_container_width=True):
+    if st.sidebar.button("Clear Chat" ,use_container_width=True, disabled=len(st.session_state.messages) == 0):
         st.session_state.messages = []
         st.success("Chat cleared!")
         st.rerun()
+        
+    with st.sidebar.status("Processed Content", state="complete"):
+        for uploaded_file in st.session_state.processed_files:
+            st.write(f"- {uploaded_file}")
+        for yt_url in st.session_state.processed_yt_urls:
+            st.write(f"- {yt_url}")
+        for website_url in st.session_state.processed_website_urls:
+            st.write(f"- {website_url}")

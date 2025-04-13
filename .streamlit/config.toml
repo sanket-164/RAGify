@@ -1,0 +1,10 @@
+[client]
+showErrorDetails = true
+toolbarMode = "viewer"
+
+[theme]
+primaryColor = "#A9A9A9"                # Dark Grey for buttons/highlights
+backgroundColor = "#1C1C1C"             # Almost black, dark grey background
+secondaryBackgroundColor = "#2F2F2F"    # Mid grey for content areas
+textColor = "#D3D3D3"                   # Light grey for readable text
+font = "sans serif"

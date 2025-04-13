@@ -1,6 +1,6 @@
 import streamlit as st
 
-def select_input():
+def select_input_method():
     st.title("Input Configuration")
 
     st.subheader("File Types to Upload")
@@ -28,9 +28,17 @@ def select_input():
 
     with col2:
         if st.button("Start Uploading", use_container_width=True, disabled=disable_button):
+            upload_options = ""
+            if st.session_state.file_extensions != []:
+                upload_options = "Files"
+            if st.session_state.no_of_yt_urls > 0:
+                upload_options = "YouTube URL" if upload_options == "" else f"{upload_options}, YouTube URL"
+            if st.session_state.no_of_website_urls > 0:
+                upload_options = "Website URL" if upload_options == "" else f"{upload_options}, Website URL"
+            st.session_state.toast_message = f"Now you can upload {upload_options} in the sidebar."
             st.session_state.show_sidebar = True
             st.session_state.show_balloons = True
             st.rerun()
 
 if __name__ == "__main__":
-    select_input()
+    select_input_method()

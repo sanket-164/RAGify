@@ -41,6 +41,9 @@ def session_initialization():
 
     if "content_changed" not in st.session_state:
         st.session_state.content_changed = False
+    
+    if "toast_message" not in st.session_state:
+        st.session_state.toast_message = ""
 
 def reset_session():
     st.session_state.messages = []
@@ -56,3 +59,4 @@ def reset_session():
     st.session_state.show_balloons = False
     st.session_state.process_content = False
     st.session_state.content_changed = False
+    st.session_state.toast_message = ""
