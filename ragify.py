@@ -9,7 +9,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_community.document_loaders import YoutubeLoader, TextLoader, WebBaseLoader, PyPDFLoader
-from utils.constants import CHUNK_SIZE, CHUNK_OVERLAP, EMBEDDING_MODEL, LLM_MODEL
+from utils.constants import CHUNK_SIZE, CHUNK_OVERLAP, SIMILAR_DOCUMENTS, EMBEDDING_MODEL, LLM_MODEL
 
 load_dotenv()
 
@@ -119,7 +119,7 @@ def create_rag_chain(vectorstore):
     Creates a retrieval-augmented generation (RAG) chain.
     """
 
-    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 15}) # k: 10 means retrive ten similar documents from 96 documents in the vectorstore
+    retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": SIMILAR_DOCUMENTS}) # k: 10 means retrive ten similar documents from documents in the vectorstore
 
     llm = ChatGoogleGenerativeAI(model=LLM_MODEL, temperature=0.3, max_tokens=None)
 

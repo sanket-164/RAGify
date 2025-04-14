@@ -1,7 +1,6 @@
 import streamlit as st
 
-def confirmation_page():
-    # with st.expander(" ", expanded=True):
+def general_instructions():
     st.markdown(f"""
     ### 🧠 Chat Guidelines
     - The chatbot **only knows what you’ve uploaded or linked** – no general web search.

@@ -1,16 +1,30 @@
 import streamlit as st
 
 from ui.sidebar import sidebar
-from ui.guideline import confirmation_page
+from ui.guideline import general_instructions
 from ui.input_config import select_input_method
 from ui.chat import load_chat_history, handle_user_prompt
 
 from utils.session import session_initialization
 
 
+st.set_page_config(
+    page_title="RAGify",
+    page_icon="images/RAGify-Logo.png",
+    layout="wide",
+    menu_items=None,
+)
+
 def main():
-    
-    st.title("RAGify")
+
+    col1, col2 = st.columns([0.5, 5])  # Adjust ratio as needed
+
+    with col1:
+        st.image("images/RAGify-Logo.png", use_container_width=True)
+
+    with col2:
+        st.title("RAGify")
+
 
     if st.session_state.show_balloons:
         st.balloons()
@@ -27,7 +41,7 @@ def main():
                 .stMainBlockContainer{
                     width: 70%;
                     max-width: 100%;
-                    padding-top : 2rem;
+                    padding-top : 5rem;
                     padding-left : 0rem;
                     padding-right : 0rem;
                 }
@@ -35,19 +49,32 @@ def main():
             """,
             unsafe_allow_html=True,
         )
+        sidebar()
         if st.session_state.messages == []:
-            confirmation_page()
+            general_instructions()
         else:
             load_chat_history()
-        sidebar()
+        
+        # User input for chat
+        if st.session_state.rag_chain is not None:
+            if prompt := st.chat_input("Ask a question about the content..."):
+                handle_user_prompt(prompt)
     else:
+        st.markdown(
+                """
+                <style>
+                    .stMainBlockContainer {
+                        width: 50%;
+                        max-width: 100%;
+                        padding-top : 5rem;
+                        padding-left : 0rem;
+                        padding-right : 0rem;
+                    }
+                </style>
+                """,
+                unsafe_allow_html=True,
+            )
         select_input_method()
-
-    # User input for chat
-    if st.session_state.rag_chain is not None:
-        if prompt := st.chat_input("Ask a question about the content..."):
-            handle_user_prompt(prompt)
-                
 
 if __name__ == "__main__":
     session_initialization()
