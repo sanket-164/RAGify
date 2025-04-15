@@ -63,6 +63,36 @@
       ```bash
       streamlit run app.py
       ```
+      
+### To pull and run the Docker image, follow these steps:
+
+1. Pull the Docker image
+   ```sh
+   docker pull sanket164/ragify
+   ```
+
+2. Run the Docker container
+   ```sh
+   docker run -p 8501:8501 -e GOOGLE_API_KEY=<your_api_key> -e USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36" --name ragify sanket164/ragify
+   ```
+   - `-d` runs the container in detached mode.
+   - `-p 8501:8501` maps the container's port 3000 to your local machine.
+   - `--name ragify` assigns a name to the container.
+
+3. Open your browser and visit
+   ```
+   http://localhost:8501
+   ```
+
+4. To stop the container
+   ```sh
+   docker stop ragify
+   ```
+   
+5. To remove the container
+   ```sh
+   docker rm ragify
+   ```
 
 ### Example Queries
 
