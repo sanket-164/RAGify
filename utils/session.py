@@ -1,5 +1,4 @@
 import streamlit as st
-from datetime import datetime
 
 def session_initialization():
     # Initialize session state for chat history and RAG chain
@@ -17,9 +16,6 @@ def session_initialization():
 
     if "processed_website_urls" not in st.session_state:
         st.session_state.processed_website_urls = []
-
-    if "persist_directory" not in st.session_state:
-        st.session_state.persist_directory = f"./{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_vectorstore"
 
     if "no_of_yt_urls" not in st.session_state:
         st.session_state.no_of_yt_urls = 0
@@ -48,7 +44,6 @@ def reset_session():
     st.session_state.processed_files = []
     st.session_state.processed_yt_urls = []
     st.session_state.processed_website_urls = []
-    st.session_state.persist_directory = f"./{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_vectorstore"
     st.session_state.show_balloons = False
     st.session_state.content_changed = False
     st.session_state.toast_message = ""

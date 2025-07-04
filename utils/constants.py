@@ -2,6 +2,7 @@ CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
 SIMILAR_DOCUMENTS = 10
 EMBEDDING_MODEL = "models/embedding-001"
+EMBEDDING_DIMENSIONS = 768
 LLM_MODEL = "gemini-1.5-flash"
 
 FILE_EXTENSION_OPTIONS = ["pdf", "docx", "txt", "pptx", "xlsx"]

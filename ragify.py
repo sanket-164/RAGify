@@ -1,17 +1,36 @@
+import os
 import pandas as pd
 from docx import Document 
 from pptx import Presentation
 from dotenv import load_dotenv
-from langchain_chroma import Chroma
+from datetime import datetime
+
+from pinecone import Pinecone, ServerlessSpec
+from langchain_pinecone import PineconeVectorStore
 from langchain.prompts import ChatPromptTemplate
 from langchain.chains import create_retrieval_chain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_community.document_loaders import YoutubeLoader, TextLoader, WebBaseLoader, PyPDFLoader
-from utils.constants import CHUNK_SIZE, CHUNK_OVERLAP, SIMILAR_DOCUMENTS, EMBEDDING_MODEL, LLM_MODEL
+
+from utils.constants import CHUNK_SIZE, CHUNK_OVERLAP, SIMILAR_DOCUMENTS, EMBEDDING_MODEL, EMBEDDING_DIMENSIONS, LLM_MODEL
 
 load_dotenv()
+
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+
+pc = Pinecone(api_key=PINECONE_API_KEY)
+index_name = f"pinecone-sanket-ragify-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"  # use an existing one, or create it in Pinecone console
+pc.create_index(
+    name=index_name,
+    dimension=EMBEDDING_DIMENSIONS,
+    metric="cosine",
+    spec=ServerlessSpec(
+        cloud='aws',
+        region='us-east-1'
+    )
+)
 
 def chunk_youtube_video(url, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP):
     """
@@ -106,12 +125,21 @@ def chunk_pptx(file_path, chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP):
 
     return chunks
 
-def create_vectorstore(chunks, persist_directory):
+def create_vectorstore(chunks):
     """
     Creates a vectorstore from the chunks.
     """
-    return Chroma.from_documents(documents=chunks, embedding=GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL), persist_directory=persist_directory)
-    # return Chroma.from_documents(documents=chunks, embedding=GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL))
+    
+    embeddings = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL)
+
+    vectorstore = PineconeVectorStore.from_documents(
+        documents=chunks,
+        embedding=embeddings,
+        index_name=index_name,
+        pinecone_api_key=PINECONE_API_KEY,
+    )
+
+    return vectorstore
 
 
 def create_rag_chain(vectorstore):
