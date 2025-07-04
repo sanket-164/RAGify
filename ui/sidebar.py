@@ -163,7 +163,7 @@ def sidebar():
             
             # Create vector store and RAG chain if chunks are generated
             if len(all_chunks) > 0:
-                vectorstore = create_vectorstore(all_chunks, st.session_state.persist_directory)
+                vectorstore = create_vectorstore(all_chunks, "st.session_state.persist_directory")
                 st.session_state.rag_chain = create_rag_chain(vectorstore)
                 st.session_state.toast_message = "Content processed successfully!"
                 st.rerun()

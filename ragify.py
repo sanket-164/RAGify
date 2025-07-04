@@ -110,8 +110,8 @@ def create_vectorstore(chunks, persist_directory):
     """
     Creates a vectorstore from the chunks.
     """
-    return Chroma.from_documents(documents=chunks, embedding=GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL), persist_directory=persist_directory)
-    # return Chroma.from_documents(documents=chunks, embedding=GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL))
+    # return Chroma.from_documents(documents=chunks, embedding=GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL), persist_directory=persist_directory)
+    return Chroma.from_documents(documents=chunks, embedding=GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL))
 
 
 def create_rag_chain(vectorstore):
